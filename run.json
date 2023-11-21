@@ -1,0 +1,17 @@
+{
+    "iverilog_path": "iverilog",
+    "vvp_path": "vvp",
+    "iverilog_params": [
+        "-g2005-sv"
+    ],
+    "test_bench_only": false,
+    "mars_run_params": [
+        "nc",
+        "db",
+        "500",
+        "ae2",
+        "mc",
+        "CompactDataAtZero"
+    ],
+    "im_length": 2048
+}
