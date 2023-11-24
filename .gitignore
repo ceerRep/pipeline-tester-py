@@ -2,3 +2,4 @@
 *.out
 *.asm
 __pycache__
+.vscode
