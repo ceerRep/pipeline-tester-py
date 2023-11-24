@@ -22,13 +22,19 @@ def iverilog_compile(
         compile_files.extend([str(x) for x in pathlib.Path(cwd).rglob("*.v")])
         compile_files.extend([str(x) for x in pathlib.Path(cwd).rglob("*.sv")])
     # print(compile_files)
+    
+    if os.path.exists(os.path.join(cwd, "a.out")):
+        os.remove(os.path.join(cwd, "a.out"))
+    
     result = subprocess.run(
         [iverilog_path, *iverilog_params, *compile_files], capture_output=True, cwd=cwd
     )
 
     if len(result.stderr):
         print(result.stderr.decode("utf-8"), file=sys.stderr)
-        raise RuntimeError("Verilog compile failed")
+    
+    if not os.path.exists(os.path.join(cwd, "a.out")):
+        raise RuntimeError("Verilog compile failed")    
 
 
 def iverilog_run(

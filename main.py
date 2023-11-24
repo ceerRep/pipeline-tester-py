@@ -19,7 +19,7 @@ def main(args: List[str]):
         loop_count = int(args[2])
         tb_file = args[3]
         
-        iverilog_compile(tb_file, False,  run_config['iverilog_path'], run_config["iverilog_params"])
+        iverilog_compile(tb_file, run_config['test_bench_only'], run_config['iverilog_path'], run_config["iverilog_params"])
 
         for i in range(loop_count):
             print(f"round {i}/{loop_count}")
