@@ -21,36 +21,28 @@ def test_run(
     project_path: str, vivado_path: str, files_to_copy: List[str]
 ) -> str:
     proj_dir = os.path.dirname(project_path)
+    sim_dir = os.path.join(proj_dir, next(filter(lambda x: x.endswith('.sim'), os.listdir(proj_dir))), 'sim_1', 'behav', 'xsim')
+
     tcl_filename = os.path.join(proj_dir, "run.tcl")
     with open(tcl_filename, "w") as fout:
         fout.write("""open_project "%s"
 launch_simulation -simset sim_1
+run all
 exit
 """ % repr(os.path.abspath(project_path))[1:-1])
-
-    cwd = os.path.dirname(project_path)
 
     for filename in files_to_copy:
         with open(filename) as fin:
             data = fin.read()
-        with open(os.path.join(cwd, os.path.basename(filename)), "w") as fout:
+        with open(os.path.join(sim_dir, os.path.basename(filename)), "w") as fout:
             fout.write(data)
 
-    result = subprocess.run([vivado_path, "-mode", "batch", "-source", "run.tcl"], cwd=cwd, capture_output=True)
+    result = subprocess.run([vivado_path, "-mode", "batch", "-source", "run.tcl"], cwd=proj_dir, capture_output=True)
 
     if len(result.stderr):
         print(result.stderr.decode("utf-8"), file=sys.stderr)
-    
-    print(result.stdout.decode("utf-8"))
 
-    return "\n".join(
-        [
-            s  # "".join(s.split())
-            for s in filter(
-                lambda x: x.startswith("@"), result.stdout.decode("utf-8").split("\n")
-            )
-        ]
-    )
+    return result.stdout.decode("utf-8")
 
 if __name__ == '__main__':
     test_run(*sys.argv[1:])

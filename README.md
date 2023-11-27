@@ -4,13 +4,23 @@
 
 ## 使用方法
 
-### 新建一个 testbench 文件在工程目录下
+### 使用 Vivado 编译仿真  
+
+#### 修改 `run.json`
+
+- compiler: 使用的编译器，应填入 "iverilog"
+- vivado_path: Vivado Tcl Shell 的批处理文件/bash脚本位置
+- mars_run_params: 参照实验指导
+
+### 使用 iverlog 编译仿真  
+
+#### 新建一个 testbench 文件在工程目录下  
 
 1. 注意修改 `TopLevel` 为你的顶层模块名
 2. 记住这个文件的路径如 `test_bench_file = dir/mips_tb.v`，其是调用 python 脚本时输入的第三个参数
-3. 如果你使用 vivado 编译运行，第三个参数是工程文件路径
 
 ```iverilog
+`timescale 1us/1us
 module mips_tb;
 
 reg reset, clock;
@@ -45,13 +55,13 @@ end
 endmodule
 ```
 
-### 修改 InstructionMemory 模块读入指令的路径
+#### 如果无法读入 code.txt 与 data.txt  
+
+修改 InstructionMemory 模块读入指令的路径  
 
 `$readmemh("dir/code.txt", memory);`
 
 `dir` 是上一步提到的 `testbench` 文件所在目录
-
-### 使用 iverilog  
 
 #### 安装 iverilog  
 
@@ -69,14 +79,6 @@ endmodule
 - mars_run_params: 参照实验指导
 
 如果你遇到了编译顺序的问题，请合理使用 `include` 伪指令。    
-
-### 使用 vivado  
-
-#### 修改 `run.json`
-
-- compiler: 使用的编译器，应填入 "iverilog"
-- vivado_path: Vivado Tcl Shell 的批处理文件/bash脚本位置
-- mars_run_params: 参照实验指导
 
 ### 运行  
 

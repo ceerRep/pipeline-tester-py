@@ -18,14 +18,7 @@ def mars_run(asm_filename: str, mars_run_params: List[str]) -> str:
     if len(result.stderr):
         print(result.stderr.decode("utf-8"), file=sys.stderr)
 
-    return "\n".join(
-        [
-            s # "".join(s.split())
-            for s in filter(
-                lambda x: x.startswith("@"), result.stdout.decode("utf-8").split("\n")
-            )
-        ]
-    )
+    return result.stdout.decode("utf-8")
 
 
 def mars_compile(asm_filename: str, im_len: int) -> str:
