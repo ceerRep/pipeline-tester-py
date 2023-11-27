@@ -3,7 +3,6 @@
 import sys
 from p5generator import P5Generator
 from mars import *
-from iverilog import *
 import json
 
 def main(args: List[str]):
@@ -15,11 +14,22 @@ def main(args: List[str]):
     with open("run.json") as fin:
         run_config = json.load(fin)
     
+    if run_config['compiler'] == 'iverilog':
+         from iverilog import test_compile, test_run
+         compiler_path = run_config['iverilog_path']
+         compiler_config = run_config["iverilog_params"]
+         runner_path = run_config['vvp_path']
+    elif run_config['compiler'] == 'vivado':
+        from vivado import test_compile, test_run
+        compiler_path = ''
+        compiler_config = ''
+        runner_path = run_config['vivado_path']
+    
     if args[1] == 'test':
         loop_count = int(args[2])
         tb_file = args[3]
         
-        iverilog_compile(tb_file, run_config['test_bench_only'], run_config['iverilog_path'], run_config["iverilog_params"])
+        test_compile(tb_file, run_config['test_bench_only'], compiler_path, compiler_config)
 
         for i in range(loop_count):
             print(f"round {i}/{loop_count}")
@@ -35,7 +45,7 @@ def main(args: List[str]):
             with open('data.txt', 'w') as fout:
                 fout.write('00000000\n' * 2048)
 
-            user_results = iverilog_run(tb_file, run_config['vvp_path'], ['code.txt', 'data.txt'])
+            user_results = test_run(tb_file, runner_path, ['code.txt', 'data.txt'])
 
             for lino, (user_line, mars_line) in enumerate(zip(user_results.split('\n'), mars_results.split('\n')), 1):
                 if user_line.split() != mars_line.split():

@@ -7,7 +7,7 @@ import subprocess
 from typing import List
 
 
-def iverilog_compile(
+def test_compile(
     testbench_path: str,
     testbench_only: bool,
     iverilog_path: str,
@@ -37,7 +37,7 @@ def iverilog_compile(
         raise RuntimeError("Verilog compile failed")    
 
 
-def iverilog_run(
+def test_run(
     testbench_path: str, vvp_path: str, files_to_copy: List[str]
 ) -> str:
     cwd = os.path.dirname(testbench_path)

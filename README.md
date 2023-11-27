@@ -8,6 +8,7 @@
 
 1. 注意修改 `TopLevel` 为你的顶层模块名
 2. 记住这个文件的路径如 `test_bench_file = dir/mips_tb.v`，其是调用 python 脚本时输入的第三个参数
+3. 如果你使用 vivado 编译运行，第三个参数是工程文件路径
 
 ```iverilog
 module mips_tb;
@@ -50,13 +51,16 @@ endmodule
 
 `dir` 是上一步提到的 `testbench` 文件所在目录
 
-### 安装 iverilog  
+### 使用 iverilog  
+
+#### 安装 iverilog  
 
 - Windows: [Icarus Verilog for Windows](https://bleyer.org/icarus/)  
 - Linux/macOS: 使用包管理器  
 
-### 修改 `run.json`
+#### 修改 `run.json`
 
+- compiler: 使用的编译器，应填入 "iverilog"
 - iverilog_path: iverilog 路径
 - vvp_path: vvp 路径
 - test_bench_only:  
@@ -65,6 +69,14 @@ endmodule
 - mars_run_params: 参照实验指导
 
 如果你遇到了编译顺序的问题，请合理使用 `include` 伪指令。    
+
+### 使用 vivado  
+
+#### 修改 `run.json`
+
+- compiler: 使用的编译器，应填入 "iverilog"
+- vivado_path: Vivado Tcl Shell 的批处理文件/bash脚本位置
+- mars_run_params: 参照实验指导
 
 ### 运行  
 
@@ -80,4 +92,6 @@ python main.py test test_loop_count test_bench_file
 python main.py gen test_loop_count target_dir
 ```
 
-> `test_loop_count` 是一个整数，代表运行/生成几个测试样例
+> `test_loop_count` 是一个整数，代表运行/生成几个测试样例  
+> 如果你使用 iverilog 编译，`test_bench_file` 应填入 testbench 文件路径  
+> 如果你使用 vivado 编译，`test_bench_file` 应填入 vivado 工程文件 (.xpr) 路径  

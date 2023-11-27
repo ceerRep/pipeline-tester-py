@@ -1,6 +1,8 @@
 {
+    "compiler": "iverilog",
     "iverilog_path": "iverilog",
     "vvp_path": "vvp",
+    "vivado_path": "",
     "iverilog_params": [
         "-g2005-sv"
     ],
