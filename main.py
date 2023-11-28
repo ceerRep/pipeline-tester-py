@@ -5,10 +5,46 @@ from p5generator import P5Generator
 from mars import *
 import json
 
+def run_program(code: str, run_config, test_run, tb_file, runner_path):
+    with open("test.asm", "w") as fout:
+        fout.write(code)
+
+    mars_results = mars_run("test.asm", run_config["mars_run_params"])
+    mars_lines = [
+        s.strip()
+        for s in filter(
+            lambda x: x.startswith("@"), 
+            mars_results.split("\n")
+        )
+    ]
+
+    with open('code.txt', 'w') as fout:
+        fout.write(mars_compile("test.asm", run_config["im_length"]))
+
+    with open('data.txt', 'w') as fout:
+        fout.write('00000000\n' * 2048)
+
+    user_results = test_run(tb_file, runner_path, ['code.txt', 'data.txt'])
+    user_lines = [
+        s.strip()
+        for s in filter(
+            lambda x: x.startswith("@"), 
+            user_results.split("\n")
+        )
+    ]
+
+    with open('user.out', 'w') as fout:
+        fout.write(user_results)
+    with open('mars.out', 'w') as fout:
+        fout.write(mars_results)
+    
+    return mars_results, user_results, mars_lines, user_lines
+
 def main(args: List[str]):
     if len(args) < 4:
         print(f"Usage: python {args[0]} test test_loop_count test_bench_file")
         print(f"Usage: python {args[0]} gen test_loop_count save_path")
+        print(f"Usage: python {args[0]} run test_bench_file asm_file")
         return
             
     with open("run.json") as fin:
@@ -36,42 +72,13 @@ def main(args: List[str]):
         for i in range(loop_count):
             print(f"round {i}/{loop_count}")
 
-            with open("test.asm", "w") as fout:
-                fout.write(P5Generator(True).generate())
-
-            mars_results = mars_run("test.asm", run_config["mars_run_params"])
-            mars_lines = [
-                s.strip()
-                for s in filter(
-                    lambda x: x.startswith("@"), 
-                    mars_results.split("\n")
-                )
-            ]
-
-            with open('code.txt', 'w') as fout:
-                fout.write(mars_compile("test.asm", run_config["im_length"]))
-
-            with open('data.txt', 'w') as fout:
-                fout.write('00000000\n' * 2048)
-
-            user_results = test_run(tb_file, runner_path, ['code.txt', 'data.txt'])
-            user_lines = [
-                s.strip()
-                for s in filter(
-                    lambda x: x.startswith("@"), 
-                    user_results.split("\n")
-                )
-            ]
-
-            with open('user.out', 'w') as fout:
-                fout.write(user_results)
-            with open('mars.out', 'w') as fout:
-                fout.write(mars_results)
+            mars_results, user_results, mars_lines, user_lines = run_program(P5Generator(True).generate(), run_config, test_run, tb_file, runner_path)
 
             try:
                 if '00002ffc' in user_lines[0]:
                     user_lines = user_lines[1:]
-                for lino, (user_line, mars_line) in enumerate(zip(user_lines[:len(mars_lines)], mars_lines, strict=True), 1):
+                
+                for lino, (user_line, mars_line) in enumerate(zip(user_lines, mars_lines), 1):
                     if user_line.split() != mars_line.split():
                         raise ValueError(f"ERROR at line {lino}\nuser:\n{user_line}\nmars:\n{mars_line}")
             except ValueError as e:
@@ -92,6 +99,16 @@ def main(args: List[str]):
 
             with open(os.path.join(target_dir, f"mars_{i}.out"), 'w') as fout:
                 fout.write(mars_run(os.path.join(target_dir, f"test_{i}.asm"), run_config["mars_run_params"]))
+    elif args[1] == 'run':
+        tb_file = args[2]
+        asm_file = args[3]
+
+        with open(asm_file) as fin:
+            asm_data = fin.read()
+        
+        test_compile(tb_file, run_config['test_bench_only'], compiler_path, compiler_config)
+        run_program(asm_data, run_config, test_run, tb_file, runner_path)
+
 
 if __name__ == '__main__':
     main(sys.argv)

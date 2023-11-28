@@ -8,7 +8,7 @@
 
 #### 修改 `run.json`
 
-- compiler: 使用的编译器，应填入 "iverilog"
+- compiler: 使用的编译器，应填入 "vivado"
 - vivado_path: Vivado Tcl Shell 的批处理文件/bash脚本位置
 - mars_run_params: 参照实验指导
 
@@ -94,6 +94,31 @@ python main.py test test_loop_count test_bench_file
 python main.py gen test_loop_count target_dir
 ```
 
+运行单个asm文件  
+
+```bash
+python main.py run test_bench_file test_asm
+```
+
 > `test_loop_count` 是一个整数，代表运行/生成几个测试样例  
 > 如果你使用 iverilog 编译，`test_bench_file` 应填入 testbench 文件路径  
 > 如果你使用 vivado 编译，`test_bench_file` 应填入 vivado 工程文件 (.xpr) 路径  
+
+### 其他
+
+如果你遇到了下周期的内存写比这周期的寄存器写先输出的问题，可以按如下方式修改 dm 模块输出  
+
+```
+reg [31:0] reg_pc;
+reg [31:0] reg_addr;
+reg [31:0] reg_data;
+always @(posedge clock) begin
+    if (write_size != 0) begin
+        reg_pc = pc;
+        reg_addr = {29'(offset), 2'b0};
+        reg_data = data_to_write;
+
+        #1 $display("@%h: *%h <= %h", reg_pc, reg_addr, reg_data);
+    end
+end
+```
