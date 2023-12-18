@@ -33,6 +33,7 @@ def mars_compile(asm_filename: str, im_len: int) -> str:
             "HexText",
             CODE_TEMP,
             "a",
+            "db",
             "nc",
             "mc",
             "CompactDataAtZero",
