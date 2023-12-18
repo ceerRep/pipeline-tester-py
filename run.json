@@ -1,5 +1,5 @@
 {
-    "compiler": "iverilog",
+    "compiler": "vivado",
     "iverilog_path": "iverilog",
     "vvp_path": "vvp",
     "vivado_path": "C:/Xilinx/Vivado/2018.3/bin/vivado.bat",
