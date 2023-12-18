@@ -122,3 +122,22 @@ always @(posedge clock) begin
     end
 end
 ```
+
+### verilog 50 inst 测试指南
+
+#### 算法测试
+
+即测试 `mips-asm-test` 内的代码，他们保证不死循环，所以你应该将 `run.json` 中 `mars_run_params` 内的数字调得足够大，比如 50000，`mips_tb.v` 内同理。
+
+由于标程会输出结果，如果你的输出少了这一行，程序会输出一个 Warning，不会认为是错误。
+
+
+运行指令：`python main.py run test_bench_file /path/to/mips-asm-test`
+
+第二个参数是 `mips_tb.v` 的路径，第三个参数现在可以是目录，表示测试目录下所有 `*.asm`
+
+#### 随机指令测试
+
+因为很容易死循环，所以周期数不要太大，现在仓库已经把所有50条指令打开，见 [p5generator.py](./p5generator.py)
+
+运行指令： `python main.py test test_loop_count test_bench_file`

@@ -6,18 +6,21 @@ from mars import *
 import json
 
 def run_program(code: str, run_config, test_run, tb_file, runner_path):
+    def gen_lines(result):
+        lines = [s.strip() for s in filter(lambda x: x.__contains__("@") or x.strip().isdigit(), result.split("\n"))]
+        for i, line in enumerate(lines):
+            if not line.startswith("@") and "@" in line:
+                lines.insert(i, line[0 : line.find("@")])
+                lines[i + 1] = line[line.find("@") :]
+        return lines
+    
     with open("test.asm", "w") as fout:
         fout.write(code)
 
     mars_results = mars_run("test.asm", run_config["mars_run_params"])
-    mars_lines = [
-        s.strip()
-        for s in filter(
-            lambda x: x.startswith("@"), 
-            mars_results.split("\n")
-        )
-    ]
-
+    mars_lines = gen_lines(mars_results)
+    print(f"Mars result: {len(mars_lines)} lines")
+    
     with open('code.txt', 'w') as fout:
         fout.write(mars_compile("test.asm", run_config["im_length"]))
 
@@ -25,18 +28,13 @@ def run_program(code: str, run_config, test_run, tb_file, runner_path):
         fout.write('00000000\n' * 2048)
 
     user_results = test_run(tb_file, runner_path, ['code.txt', 'data.txt'])
-    user_lines = [
-        s.strip()
-        for s in filter(
-            lambda x: x.startswith("@"), 
-            user_results.split("\n")
-        )
-    ]
+    user_lines = gen_lines(user_results)
+    print(f"User result: {len(user_lines)} lines")
 
     with open('user.out', 'w') as fout:
-        fout.write(user_results)
+        fout.write("\n".join(user_lines))
     with open('mars.out', 'w') as fout:
-        fout.write(mars_results)
+        fout.write("\n".join(mars_lines))
     
     return mars_results, user_results, mars_lines, user_lines
 
@@ -101,14 +99,52 @@ def main(args: List[str]):
                 fout.write(mars_run(os.path.join(target_dir, f"test_{i}.asm"), run_config["mars_run_params"]))
     elif args[1] == 'run':
         tb_file = args[2]
-        asm_file = args[3]
-
-        with open(asm_file) as fin:
-            asm_data = fin.read()
-        
-        test_compile(tb_file, run_config['test_bench_only'], compiler_path, compiler_config)
-        run_program(asm_data, run_config, test_run, tb_file, runner_path)
-
+        asm_file_dir = args[3]
+        if os.path.isdir(asm_file_dir):
+            asm_dir = asm_file_dir
+            test_compile(tb_file, run_config["test_bench_only"], compiler_path, compiler_config)
+            for file in os.listdir(asm_dir):
+                if not file.endswith(".asm"):
+                    continue
+                asm_file = os.path.join(asm_dir, file)
+                print(f"Running {asm_file}")
+                with open(asm_file, encoding="utf-8") as fin:
+                    asm_data = fin.read()
+                _, _, mars_lines, user_lines = run_program(asm_data, run_config, test_run, tb_file, runner_path)
+                try:
+                    mars_iter = iter(mars_lines)
+                    for lino, (user_line, mars_line) in enumerate(zip(user_lines, mars_iter), 1):
+                        if user_line.split() != mars_line.split() and mars_line.isdigit():
+                            print(f"Warning: at line {lino}\nuser:\n{user_line}\nmars:\n{mars_line}")
+                            mars_line = next(mars_iter)
+                        if user_line.split() != mars_line.split():
+                            raise ValueError(f"ERROR at line {lino}\nuser:\n{user_line}\nmars:\n{mars_line}")
+                    print("{} PASSED".format(asm_file))
+                except ValueError as e:
+                        print(*e.args, sep='\n')
+                        print("You can check file test.asm, code.txt, user.out and mars.out")
+                        exit(0)
+                print("----------------------------------------------")
+        else:
+            asm_file = asm_file_dir
+            with open(asm_file) as fin:
+                asm_data = fin.read()
+            test_compile(tb_file, run_config['test_bench_only'], compiler_path, compiler_config)
+            _, _, mars_lines, user_lines = run_program(asm_data, run_config, test_run, tb_file, runner_path)
+            try:
+                mars_iter = iter(mars_lines)
+                for lino, (user_line, mars_line) in enumerate(zip(user_lines, mars_iter), 1):
+                    if user_line.split() != mars_line.split() and mars_line.isdigit():
+                        print(f"Warning: at line {lino}\nuser:\n{user_line}\nmars:\n{mars_line}")
+                        mars_line = next(mars_iter)
+                    if user_line.split() != mars_line.split():
+                        raise ValueError(f"ERROR at line {lino}\nuser:\n{user_line}\nmars:\n{mars_line}")
+                print("{} PASSED".format(asm_file))
+            except ValueError as e:
+                    print(*e.args, sep='\n')
+                    print("You can check file test.asm, code.txt, user.out and mars.out")
+                    exit(0)
 
 if __name__ == '__main__':
     main(sys.argv)
+    # python .\main.py run D:\Code\mips\inst50\mips_tb.v D:\Code\mips\mips-asm-test
