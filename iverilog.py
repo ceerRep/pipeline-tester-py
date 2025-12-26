@@ -19,8 +19,8 @@ def test_compile(
     if testbench_only:
         compile_files.append(testbench_path)
     else:
-        compile_files.extend([str(x) for x in pathlib.Path(cwd).rglob("*.v")])
-        compile_files.extend([str(x) for x in pathlib.Path(cwd).rglob("*.sv")])
+        compile_files.extend([str(x.resolve()) for x in pathlib.Path(cwd).rglob("*.v")])
+        compile_files.extend([str(x.resolve()) for x in pathlib.Path(cwd).rglob("*.sv")])
     # print(compile_files)
     
     if os.path.exists(os.path.join(cwd, "a.out")):
